@@ -2,18 +2,18 @@
 /**
  * Interface to implement to define custom form state storage
  */
-export interface IFormStateProvider<TVal> {
+export interface IFormStateProvider<TFormValue> {
 	/**
 	 * Read the current form state
 	 */
-	readState(): TVal;
+	readState(): TFormValue;
 	/**
 	 * Write the current form state
 	 * @param newState The new state value
 	 * @param changePath The path within the state that changed. Will be `null` if the entire state value changed
 	 * @param changeEvent The state modification event type
 	 */
-	writeState(newState: TVal, changePath: string, changeEvent: FormChangeEvent): void;
+	writeState(newState: TFormValue, changePath: string, changeEvent: FormChangeEvent): void;
 }
 
 

@@ -15,6 +15,7 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 	private errors: { [path: string]: string } = {};
 	private fields: Array<RegisteredField> = [];
 	private changeWatchers: ChangeWatcher[] = [];
+	private registeredFields: RegisteredField[] = [];
 
 	constructor(props: FormPropsConfig<TFormState>) {
 		super(props);
@@ -24,9 +25,10 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 			this.beginChange(path, value, "change");
 		});
 
-
 		this.watchChange = this.watchChange.bind(this);
 		this.beginChange = this.beginChange.bind(this);
+		this.registerField = this.registerField.bind(this);
+		this.unregisterField = this.unregisterField.bind(this);
 
 		this.state = {
 			context: {
@@ -36,12 +38,27 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 				setError: (path, error) => {
 					this.errors[path] = error;
 				},
-				setValue: this.beginChange
+				setValue: this.beginChange,
+				getErrors: () => this.errors,
+				registerField: this.registerField,
+				unregisterField: this.unregisterField
 			},
 			changeCount: 0,
 			injection: this.createInjection(),
 			stateProvider: this.props.stateProvider ?? new DefaultFormStateProvider<TFormState>()
 		};
+
+		if (!this.state.stateProvider.readState() || (this.props.initialValues && this.props.enableReinitialize)) {
+			this.state.stateProvider.writeState((this.props.initialValues || {}) as TFormState, null, "initialize");
+		}
+	}
+
+	private registerField(field: RegisteredField) {
+		this.registeredFields.push(field);
+	}
+
+	private unregisterField(field: RegisteredField) {
+		this.registeredFields.remove(field);
 	}
 
 	private createInjection(): InjectedForm<TFormState> {
@@ -56,16 +73,16 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 			},
 			reset: () => {
 				this.errors = {};
-				this.beginChange("", this.props.initialValues || {}, "defaultVal");
+				this.beginChange(null, this.props.initialValues || {}, "defaultVal");
 			},
 			setValue: (path, value, callback) => {
-				this.beginChange(typeof path === "string" ? path : path.path(), value, "change", callback);
+				this.beginChange(path, value, "change", callback);
 			},
 			getValue: path => {
 				return objectutil.getValue(this.state.stateProvider.readState(), typeof path === "string" ? path : path.path());
 			},
 			clearField: (path, callback) => {
-				this.beginChange(typeof path === "string" ? path : path.path(), null, "clearfield", callback);
+				this.beginChange(path, null, "clearfield", callback);
 			},
 			isValid: () => {
 				return Object.keys(this.errors).length === 0;
@@ -116,7 +133,8 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 		}
 	}
 
-	private beginChange(path: string, value: any, event: FormChangeEvent, callback?: () => void) {
+	private beginChange(_path: string | TypedPath<any>, value: any, event: FormChangeEvent, callback?: (val: any) => void) {
+		const path = typeof _path === "string" ? _path : _path.path();
 		const currentValue = this.state.stateProvider.readState();
 		const newValue = objectutil.setValue(currentValue, path, value, this.props.pure);
 		this.props.onChangeBegin?.(path, value, currentValue, newValue);
@@ -125,7 +143,7 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 			prev => ({ changeCount: prev.changeCount + 1 }),
 			() => {
 				this.props.onChange?.(path, value, newValue, currentValue);
-				callback?.();
+				callback?.(value);
 			}
 		);
 		for (const watcher of this.changeWatchers) {
@@ -186,6 +204,7 @@ interface State<TFormState> {
 }
 
 type ChangeWatcher = {
+	/** callback */
 	cb: (path: string, newValue: any, event: FormChangeEvent) => void;
 	path: string;
 };

@@ -45,15 +45,22 @@ export interface InjectedForm<TFormState> {
 	getFormValue<T>(path: string | TypedPath<T>): T;
 }
 
-export interface InjectedField<TValue, TComponentProps, TFieldValue> {
-	fieldProps: {
-		onChange(f: TFieldValue | React.ChangeEvent<HTMLInputElement>): void;
+export type InjectedField<TValue, TComponentProps extends object, TFieldValue = TValue> = _InjectedField<
+	TValue,
+	TComponentProps,
+	TFieldValue
+> &
+	OmitUnion<TComponentProps, _InjectedField<TValue, TComponentProps, TFieldValue>["fieldProps"]>;
+
+interface _InjectedField<TValue, TComponentProps extends object, TFieldValue> {
+	readonly fieldProps: {
+		onChange(f: TFieldValue | React.ChangeEvent<HTMLElement>): void;
 		onBlur(e: React.FocusEvent): void;
 		onFocus(e: React.FocusEvent): void;
 		readonly value: TFieldValue;
 	};
 	/** Form and field specific props */
-	form: {
+	readonly form: {
 		getFormValue<TFormValue>(): TFormValue;
 		/** Set the callback that will be invoked whenever the form component implementation should clear its value from the dom */
 		setClearCallback(action: () => void): void;
@@ -69,4 +76,42 @@ export interface InjectedField<TValue, TComponentProps, TFieldValue> {
 	 * 	const { form, fieldProps, ...rest } = this.props;
 	 */
 	componentProps(): OmitUnion<TComponentProps, InjectedField<TValue, TComponentProps, TFieldValue>["fieldProps"]>;
+}
+
+export interface InjectedFieldArray<TValue> {
+	/**
+	 * Map each item in the array. `key` is a unique value for each item in the array
+	 * @param action
+	 */
+	map(action: (path: TypedPath<TValue>, key?: number | string, index?: number) => React.ReactNode): React.ReactNode[];
+	/** Get item at index */
+	get(index: number): TValue;
+	/** Return all items in underlying array */
+	value(): TValue[];
+	/** Moves an element from one index in the array to another. */
+	move(from: number, to: number, cb?: (newArray: TValue[]) => void): void;
+	/** Removes an item from the end of the array. Returns the item removed. */
+	pop(callback?: (newArray: TValue[]) => void): TValue;
+	/** Removes an item from beginning of the array. Returns the item removed. */
+	shift(callback?: (newArray: TValue[]) => void): TValue;
+	/** Removes all the values from the array. */
+	clear(callback?: (newArray: TValue[]) => void): void;
+	/** Swap 2 items */
+	swap(index1: number, index2: number, callback?: (newArray: TValue[]) => void): void;
+	/** `itemId` is a unique id for this item inside this `FieldArray`. Use it to map `key` props on JSX elements */
+	forEach(action: (path: TypedPath<TValue>, value: TValue, index?: number, itemId?: number) => void): void;
+	/** add an item to the array */
+	push(item: Partial<TValue>, callback?: (newArray: TValue[]) => void): void;
+	/** Adds an item to the beginning of the array. Returns nothing. */
+	unshift(item: Partial<TValue>, callback?: (newArray: TValue[]) => void): void;
+	/** Insert item at index */
+	insert(index: number, item: Partial<TValue>, callback?: (newArray: TValue[]) => void): void;
+	/** Array splice */
+	splice(start: number, deleteCount?: number, newItems?: TValue[], callback?: (newArray: TValue[]) => void): void;
+
+	/** Number of items in underlying list */
+	readonly length: number;
+
+	/** Any validation error for this field array */
+	readonly error: string;
 }

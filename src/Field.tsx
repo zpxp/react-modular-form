@@ -7,13 +7,12 @@ import { DefaultFormStateProvider } from "./defaultFormStateProvider";
 import { createTypedPath, TypedPath, TypedPathBase } from "utils/typedpath";
 import objectutil from "utils/object";
 import { RegisteredField } from "./registeredField";
-import { ReactComponent, OmitUnion } from "z-types";
+import { ReactComponent, OmitUnion, CommonComponentProps, OmitName } from "z-types";
 import { IFieldFormatter, IFieldFormatterMetadata } from "./IFieldFormatter";
+import { FormValidatorType } from "./validators";
 
-// add merge styles so we can use consumer styles in functional children
-@MergeStyles({})
-export class Field<TValue, TComponentProps, TFormatterValue = TValue> extends React.PureComponent<
-	FieldProps<TValue, TComponentProps, TFormatterValue>,
+export class Field<TValue, TComponentProps extends object, TFormatterValue = TValue, TFormValue = any> extends React.PureComponent<
+	FieldProps<TValue, TComponentProps, TFormatterValue, TFormValue>,
 	State
 > {
 	static contextType = _FormContext;
@@ -24,12 +23,13 @@ export class Field<TValue, TComponentProps, TFormatterValue = TValue> extends Re
 	private clearAction: () => void;
 	hasErrorOverride: boolean;
 
-	constructor(props: FieldProps<TValue, TComponentProps, TFormatterValue>, context: IFormContext<any>) {
+	constructor(props: FieldProps<TValue, TComponentProps, TFormatterValue, TFormValue>, context: IFormContext<any>) {
 		super(props);
 		this.context = context;
 		this.state = {};
 
 		this.uptake = this.uptake.bind(this);
+		this.onChange = this.onChange.bind(this);
 
 		this.unsub = this.context.watchChange(this.path, this.onChange);
 
@@ -39,8 +39,13 @@ export class Field<TValue, TComponentProps, TFormatterValue = TValue> extends Re
 				return field.path;
 			},
 			touched: false,
-			isFieldArray: false
+			isFieldArray: false,
+			get error() {
+				return field.context.getErrors()[field.path];
+			}
 		};
+
+		this.context.registerField(this.field);
 	}
 
 	get path() {
@@ -55,7 +60,11 @@ export class Field<TValue, TComponentProps, TFormatterValue = TValue> extends Re
 		this.props.onChange?.(value);
 	}
 
-	componentDidUpdate(prevProps: FieldProps<TValue, TComponentProps, TFormatterValue>, prevState: State) {
+	componentWillUnmount() {
+		this.context.unregisterField(this.field);
+	}
+
+	componentDidUpdate(prevProps: FieldProps<TValue, TComponentProps, TFormatterValue, TFormValue>, prevState: State) {
 		if (prevProps.path !== this.props.path) {
 			this.unsub();
 			//create a new sub
@@ -79,18 +88,18 @@ export class Field<TValue, TComponentProps, TFormatterValue = TValue> extends Re
 	}
 
 	private uptake(value: TValue) {
-		this.context.setValue(this.props.path, value, "change", () => this.forceUpdate());
+		this.context.setValue(this.props.path, value, "change");
 	}
 
 	private getInjection(): InjectedField<TValue, TComponentProps, TFormatterValue> {
 		const field = this;
 		return {
-			...this.props.componentProps,
+			...(this.props.componentProps as any),
 			fieldProps: {
 				onChange: e => {
 					let value: TFormatterValue;
-					if (e && "target" in e) {
-						value = e.target.value as any;
+					if (typeof e === "object" && "target" in e) {
+						value = (e.target as any).value;
 					} else {
 						value = e as TFormatterValue;
 					}
@@ -142,16 +151,25 @@ export class Field<TValue, TComponentProps, TFormatterValue = TValue> extends Re
 	}
 
 	render() {
-		return <this.props.component {...this.getInjection()}>{this.props.children}</this.props.component>;
+		return <this.props.component {...(this.getInjection() as any)}>{this.props.children}</this.props.component>;
 	}
 }
 
-export interface FieldProps<TValue, TComponentProps, TFormatterValue> {
+export type FieldProps<TValue, TComponentProps extends object, TFormatterValue, TFormValue> = _FieldProps<
+	TValue,
+	TComponentProps,
+	TFormatterValue,
+	TFormValue
+> &
+	(TComponentProps extends { children: infer U } ? { children: U } : {});
+
+interface _FieldProps<TValue, TComponentProps extends object, TFormatterValue, TFormValue> extends CommonComponentProps {
 	path: TypedPath<TValue>;
 	component: ReactComponent<InjectedField<TValue, TComponentProps, TFormatterValue>>;
 	/** The props that will passed to `component` */
 	componentProps?: OmitUnion<TComponentProps, InjectedField<TValue, TComponentProps, TFormatterValue>["fieldProps"] & { children: any }>;
 	formatter?: IFieldFormatter<TValue, TFormatterValue>;
+	validator?: FormValidatorType<TValue, TFormValue> | FormValidatorType<TValue, TFormValue>[];
 	defaultValue?: TValue;
 	onChange?(value: TValue): void;
 	onBlur?(e: React.FocusEvent): void;
