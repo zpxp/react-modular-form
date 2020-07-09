@@ -1,13 +1,13 @@
 import { IFormStateProvider } from "./IStateProvider";
 
-export class DefaultFormStateProvider<TVal> implements IFormStateProvider<TVal> {
-	private state: TVal;
+export class DefaultFormStateProvider<TValue> implements IFormStateProvider<TValue> {
+	private state: TValue;
 
-	readState(): TVal {
+	readState(): TValue {
 		return this.state;
 	}
 
-	writeState(newState: TVal): void {
+	writeState(newState: TValue): void {
 		this.state = newState;
 	}
 }

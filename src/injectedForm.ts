@@ -19,6 +19,8 @@ export interface InjectedForm<TFormState> {
 	/** set the value at the path to `null` and invoke any `clearCallback`s at that path  */
 	clearField<T>(path: string | TypedPath<T>, callback?: () => void): void;
 	isValid(): boolean;
+	/** like `isValid` but rerenders and touches all fields */
+	checkValid(): boolean;
 	isTouched(): boolean;
 	getErrors(): { [paths: string]: string };
 	/**

@@ -40,7 +40,8 @@ export class FieldArray<TValue, TFormValue = any> extends React.PureComponent<Fi
 			isFieldArray: true,
 			get error() {
 				return field.context.getErrors()[field.path];
-			}
+			},
+			getErrors: this.getErrors
 		};
 
 		this.state = {
@@ -58,6 +59,37 @@ export class FieldArray<TValue, TFormValue = any> extends React.PureComponent<Fi
 		}
 
 		this.props.onChange?.(value);
+	}
+
+	getErrors(touch: boolean, rerender: boolean): string {
+		if (touch) {
+			this.field.touched = true;
+		}
+		if (rerender) {
+			// need to rerender
+			this.forceUpdate();
+		}
+		if (!this.props.validation) {
+			return null;
+		}
+
+		const formVal = this.context.getFormValue();
+		const value = this.context.getValue(this.props.path);
+
+		if (Array.isArray(this.props.validation)) {
+			for (const validator of this.props.validation as FormValidatorType<TValue[], TFormValue>[]) {
+				const error = validator(value, formVal, this.field);
+				if (error) {
+					return error;
+				}
+			}
+		} else {
+			const error = (this.props.validation as FormValidatorType<TValue[], TFormValue>)(value, formVal, this.field);
+			if (error) {
+				return error;
+			}
+		}
+		return null;
 	}
 
 	componentDidUpdate(prevProps: FieldArrayProps<TValue[], TFormValue>) {
@@ -168,7 +200,7 @@ export class FieldArray<TValue, TFormValue = any> extends React.PureComponent<Fi
 export interface FieldArrayProps<TArrayValue extends any[], TFormValue> extends CommonComponentProps {
 	path: TypedPath<TArrayValue>;
 	children(injection: InjectedFieldArray<TArrayValue[0]>): React.ReactNode;
-	validator?: FormValidatorType<TArrayValue, TFormValue>;
+	validation?: FormValidatorType<TArrayValue, TFormValue> | FormValidatorType<TArrayValue, TFormValue>[];
 	defaultValue?: TArrayValue;
 	/** any `styleName`s on functional children's jsx will need their styles passed in here */
 	classes?: object;

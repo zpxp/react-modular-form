@@ -7,4 +7,3 @@ export { IFormStateProvider } from "./IStateProvider";
 export { InjectedField, InjectedFieldArray, InjectedForm } from "./injectedForm";
 export { RegisteredField } from "./registeredField";
 export { FormValidatorType, FormValidators } from "./validators";
-export { createTypedPath, TypedPath, TypedPathBase } from "./typedpath";

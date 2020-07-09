@@ -13,7 +13,6 @@ import { RegisteredField } from "./registeredField";
 export class Form<TFormState extends object> extends React.PureComponent<FormPropsConfig<TFormState>, State<TFormState>> {
 	readonly path: TypedPath<TFormState>;
 	private errors: { [path: string]: string } = {};
-	private fields: Array<RegisteredField> = [];
 	private changeWatchers: ChangeWatcher[] = [];
 	private registeredFields: RegisteredField[] = [];
 
@@ -65,10 +64,10 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 		return {
 			paths: this.path,
 			handleSubmit: (onSuccess, onFail, force) => {
-				if (force || Object.keys(this.errors).length === 0) {
+				if (force || !this.checkValid(true, true)) {
 					return onSuccess(this.state.stateProvider.readState());
 				} else {
-					return onFail({ ...this.errors });
+					return onFail?.({ ...this.errors });
 				}
 			},
 			reset: () => {
@@ -85,10 +84,13 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 				this.beginChange(path, null, "clearfield", callback);
 			},
 			isValid: () => {
-				return Object.keys(this.errors).length === 0;
+				return this.checkValid(false, false);
+			},
+			checkValid: () => {
+				return this.checkValid(true, true);
 			},
 			isTouched: () => {
-				return this.fields.some(x => x.touched);
+				return this.registeredFields.some(x => x.touched);
 			},
 			getErrors: () => {
 				return { ...this.errors };
@@ -101,6 +103,21 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 				return objectutil.getValue(this.state.stateProvider.readState(), typeof path === "string" ? path : path.path());
 			}
 		};
+	}
+
+	checkValid(touch: boolean, rerender: boolean) {
+		this.errors = {};
+		let hasError = false;
+		for (const field of this.registeredFields) {
+			const error = field.getErrors(touch, rerender);
+			if (error) {
+				hasError = true;
+				this.errors[field.path] = error;
+			} else {
+				delete this.errors[field.path];
+			}
+		}
+		return hasError;
 	}
 
 	private watchChange(

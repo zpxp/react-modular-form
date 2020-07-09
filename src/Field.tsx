@@ -30,6 +30,7 @@ export class Field<TValue, TComponentProps extends object, TFormatterValue = TVa
 
 		this.uptake = this.uptake.bind(this);
 		this.onChange = this.onChange.bind(this);
+		this.getErrors = this.getErrors.bind(this);
 
 		this.unsub = this.context.watchChange(this.path, this.onChange);
 
@@ -42,7 +43,8 @@ export class Field<TValue, TComponentProps extends object, TFormatterValue = TVa
 			isFieldArray: false,
 			get error() {
 				return field.context.getErrors()[field.path];
-			}
+			},
+			getErrors: this.getErrors
 		};
 
 		this.context.registerField(this.field);
@@ -57,11 +59,45 @@ export class Field<TValue, TComponentProps extends object, TFormatterValue = TVa
 			this.forceUpdate();
 		}
 
+		const error = this.getErrors(true, false);
+		this.context.setError(this.path, error);
+
 		this.props.onChange?.(value);
 	}
 
 	componentWillUnmount() {
 		this.context.unregisterField(this.field);
+	}
+
+	getErrors(touch: boolean, rerender: boolean): string {
+		if (touch) {
+			this.field.touched = true;
+		}
+		if (rerender) {
+			// need to rerender
+			this.forceUpdate();
+		}
+		if (!this.props.validation) {
+			return null;
+		}
+
+		const formVal = this.context.getFormValue();
+		const value = this.context.getValue(this.props.path);
+
+		if (Array.isArray(this.props.validation)) {
+			for (const validator of this.props.validation as FormValidatorType<TValue, TFormValue>[]) {
+				const error = validator(value, formVal, this.field);
+				if (error) {
+					return error;
+				}
+			}
+		} else {
+			const error = (this.props.validation as FormValidatorType<TValue, TFormValue>)(value, formVal, this.field);
+			if (error) {
+				return error;
+			}
+		}
+		return null;
 	}
 
 	componentDidUpdate(prevProps: FieldProps<TValue, TComponentProps, TFormatterValue, TFormValue>, prevState: State) {
@@ -169,7 +205,7 @@ interface _FieldProps<TValue, TComponentProps extends object, TFormatterValue, T
 	/** The props that will passed to `component` */
 	componentProps?: OmitUnion<TComponentProps, InjectedField<TValue, TComponentProps, TFormatterValue>["fieldProps"] & { children: any }>;
 	formatter?: IFieldFormatter<TValue, TFormatterValue>;
-	validator?: FormValidatorType<TValue, TFormValue> | FormValidatorType<TValue, TFormValue>[];
+	validation?: FormValidatorType<TValue, TFormValue> | FormValidatorType<TValue, TFormValue>[];
 	defaultValue?: TValue;
 	onChange?(value: TValue): void;
 	onBlur?(e: React.FocusEvent): void;
