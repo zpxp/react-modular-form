@@ -1,11 +1,11 @@
 import * as React from "react";
-import { MergeStyles } from "utils/mergeStyles";
+import { MergeStyles } from "./mergeStyles";
 import { IFormStateProvider, FormChangeEvent } from "./IStateProvider";
 import { InjectedForm } from "./injectedForm";
 import { IFormContext, _FormContext } from "./context";
 import { DefaultFormStateProvider } from "./defaultFormStateProvider";
-import { createTypedPath, TypedPath, TypedPathBase } from "utils/typedpath";
-import objectutil from "utils/object";
+import { createTypedPath, TypedPath, TypedPathBase } from "./typedpath";
+import objectutil from "./object";
 import { RegisteredField } from "./registeredField";
 
 // add merge styles so we can use consumer styles in functional children
@@ -32,7 +32,8 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 		this.state = {
 			context: {
 				watchChange: this.watchChange,
-				getValue: path => objectutil.getValue(this.state.stateProvider.readState(), typeof path === "string" ? path : path.path()),
+				getValue: (path) =>
+					objectutil.getValue(this.state.stateProvider.readState(), typeof path === "string" ? path : path.path()),
 				getFormValue: () => this.state.stateProvider.readState(),
 				setError: (path, error) => {
 					this.errors[path] = error;
@@ -57,7 +58,7 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 	}
 
 	private unregisterField(field: RegisteredField) {
-		this.registeredFields.remove(field);
+		arrayRemove(this.registeredFields, field);
 	}
 
 	private createInjection(): InjectedForm<TFormState> {
@@ -77,7 +78,7 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 			setValue: (path, value, callback) => {
 				this.beginChange(path, value, "change", callback);
 			},
-			getValue: path => {
+			getValue: (path) => {
 				return objectutil.getValue(this.state.stateProvider.readState(), typeof path === "string" ? path : path.path());
 			},
 			clearField: (path, callback) => {
@@ -90,7 +91,7 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 				return this.checkValid(true, true);
 			},
 			isTouched: () => {
-				return this.registeredFields.some(x => x.touched);
+				return this.registeredFields.some((x) => x.touched);
 			},
 			getErrors: () => {
 				return { ...this.errors };
@@ -99,7 +100,7 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 				return this.watchChange(path, () => component.forceUpdate());
 			},
 			watchChange: this.watchChange,
-			getFormValue: path => {
+			getFormValue: (path) => {
 				return objectutil.getValue(this.state.stateProvider.readState(), typeof path === "string" ? path : path.path());
 			}
 		};
@@ -125,7 +126,7 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 		action: (pathThatChanged: string, newValue: any, event: FormChangeEvent) => void
 	) {
 		if (Array.isArray(path)) {
-			const watchers: ChangeWatcher[] = path.map(p => {
+			const watchers: ChangeWatcher[] = path.map((p) => {
 				const watcher = {
 					path: typeof p === "string" ? p : p.path(),
 					cb: action
@@ -135,7 +136,7 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 			});
 
 			return () => {
-				this.changeWatchers = this.changeWatchers.filter(x => !watchers.includes(x));
+				this.changeWatchers = this.changeWatchers.filter((x) => !watchers.includes(x));
 			};
 		} else {
 			const watcher = {
@@ -145,7 +146,7 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 			this.changeWatchers.push(watcher);
 
 			return () => {
-				this.changeWatchers.removeItem(watcher);
+				arrayRemove(this.changeWatchers, watcher);
 			};
 		}
 	}
@@ -157,7 +158,7 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 		this.props.onChangeBegin?.(path, value, currentValue, newValue);
 		this.state.stateProvider.writeState(newValue, path, event);
 		this.setState(
-			prev => ({ changeCount: prev.changeCount + 1 }),
+			(prev) => ({ changeCount: prev.changeCount + 1 }),
 			() => {
 				this.props.onChange?.(path, value, newValue, currentValue);
 				callback?.(value);
@@ -225,3 +226,13 @@ type ChangeWatcher = {
 	cb: (path: string, newValue: any, event: FormChangeEvent) => void;
 	path: string;
 };
+
+function arrayRemove<T>(array: T[], item: T) {
+	const index = array.indexOf(item);
+	if (~index) {
+		array.splice(index, 1);
+		return true;
+	} else {
+		return false;
+	}
+}

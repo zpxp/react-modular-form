@@ -1,7 +1,7 @@
-import { TypedPath, TypedPathBase } from "utils/typedpath";
+import { TypedPath, TypedPathBase } from "./typedpath";
 import { RegisteredField } from "./registeredField";
-import { OmitUnion } from "z-types";
 import { FormChangeEvent } from "./IStateProvider";
+import { OmitUnion } from "./types";
 
 export interface InjectedForm<TFormState> {
 	readonly paths: TypedPath<TFormState>;

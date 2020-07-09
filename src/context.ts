@@ -1,6 +1,6 @@
 import * as React from "react";
 import { FormChangeEvent } from "./IStateProvider";
-import { TypedPath } from "utils/typedpath";
+import { TypedPath } from "./typedpath";
 import { RegisteredField } from "./registeredField";
 
 export const _FormContext: React.Context<IFormContext<any>> = React.createContext<IFormContext<any>>({} as any);

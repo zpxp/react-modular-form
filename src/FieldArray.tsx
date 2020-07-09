@@ -1,15 +1,14 @@
 import * as React from "react";
-import { MergeStyles } from "utils/mergeStyles";
+import { MergeStyles } from "./mergeStyles";
 import { IFormStateProvider, FormChangeEvent } from "./IStateProvider";
 import { InjectedForm, InjectedField, InjectedFieldArray } from "./injectedForm";
 import { IFormContext, _FormContext } from "./context";
 import { DefaultFormStateProvider } from "./defaultFormStateProvider";
-import { createTypedPath, TypedPath, TypedPathBase } from "utils/typedpath";
-import objectutil from "utils/object";
+import { createTypedPath, TypedPath, TypedPathBase } from "./typedpath";
+import objectutil from "./object";
 import { RegisteredField } from "./registeredField";
-import { ReactComponent, OmitUnion, CommonComponentProps } from "z-types";
-import { IFieldFormatter, IFieldFormatterMetadata } from "./IFieldFormatter";
 import { FormValidatorType } from "./validators";
+import { CommonComponentProps } from "./types";
 
 let keyIndex = 0;
 const keySym = typeof Symbol === "undefined" ? "$$form_fieldArrayKey" : Symbol.for("$$form_fieldArrayKey");
@@ -74,17 +73,17 @@ export class FieldArray<TValue, TFormValue = any> extends React.PureComponent<Fi
 		}
 
 		const formVal = this.context.getFormValue();
-		const value = this.context.getValue(this.props.path);
+		const value = this.context.getValue<TValue[]>(this.props.path);
 
 		if (Array.isArray(this.props.validation)) {
-			for (const validator of this.props.validation as FormValidatorType<TValue[], TFormValue>[]) {
+			for (const validator of this.props.validation) {
 				const error = validator(value, formVal, this.field);
 				if (error) {
 					return error;
 				}
 			}
 		} else {
-			const error = (this.props.validation as FormValidatorType<TValue[], TFormValue>)(value, formVal, this.field);
+			const error = this.props.validation(value, formVal, this.field);
 			if (error) {
 				return error;
 			}
@@ -118,13 +117,13 @@ export class FieldArray<TValue, TFormValue = any> extends React.PureComponent<Fi
 		const field = this;
 
 		return {
-			map: action => {
+			map: (action) => {
 				const arr = getArray();
 				return arr.map((val, index) => {
 					return action(this.props.path[index], index, this.getKey(val, index));
 				});
 			},
-			forEach: action => {
+			forEach: (action) => {
 				const arr = getArray();
 				arr.forEach((val, index) => {
 					action(this.props.path[index], this.getKey(val, index), index);
@@ -142,7 +141,7 @@ export class FieldArray<TValue, TFormValue = any> extends React.PureComponent<Fi
 			},
 			insert: (index, item, callback) => {
 				const arr = getArray().slice();
-				arr.insert(index, item as TValue);
+				arr.splice(index, 0, item as TValue);
 				this.context.setValue(this.props.path, arr, "change", callback);
 			},
 			splice: (start, count = 1, newItems, callback) => {
@@ -150,7 +149,7 @@ export class FieldArray<TValue, TFormValue = any> extends React.PureComponent<Fi
 				arr.splice(start, count, ...newItems);
 				this.context.setValue(this.props.path, arr, "change", callback);
 			},
-			get: index => {
+			get: (index) => {
 				const arr = getArray();
 				return arr[index];
 			},
@@ -163,19 +162,19 @@ export class FieldArray<TValue, TFormValue = any> extends React.PureComponent<Fi
 				arr.splice(to, 0, ...arr.splice(from, 1));
 				this.context.setValue(this.props.path, arr, "change", callback);
 			},
-			pop: callback => {
+			pop: (callback) => {
 				const arr = getArray().slice();
 				const item = arr.pop();
 				this.context.setValue(this.props.path, arr, "change", callback);
 				return item;
 			},
-			shift: callback => {
+			shift: (callback) => {
 				const arr = getArray().slice();
 				const item = arr.shift();
 				this.context.setValue(this.props.path, arr, "change", callback);
 				return item;
 			},
-			clear: callback => {
+			clear: (callback) => {
 				this.context.setValue(this.props.path, this.props.defaultValue ?? [], "change", callback);
 			},
 			swap: (index1, index2, callback) => {

@@ -1,6 +1,6 @@
 import * as React from "react";
-import { ReactComponent } from "z-types";
 import { FormPropsConfig, Form } from "./Form";
+import { ReactComponent } from "./types";
 
 function FormFactoryImpl<TFormValue extends object>(Component: ReactComponent<any>, config: FormPropsConfig<TFormValue>) {
 	class FormFactory extends React.PureComponent<

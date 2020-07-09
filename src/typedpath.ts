@@ -1,4 +1,4 @@
-import { Indexable } from "z-types";
+import { Indexable } from "./types";
 
 // to string methods that are called explicitly
 const toStringMethods: (string | symbol | number)[] = ["path"];

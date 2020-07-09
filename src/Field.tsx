@@ -1,15 +1,15 @@
 import * as React from "react";
-import { MergeStyles } from "utils/mergeStyles";
+import { MergeStyles } from "./mergeStyles";
 import { IFormStateProvider, FormChangeEvent } from "./IStateProvider";
 import { InjectedForm, InjectedField } from "./injectedForm";
 import { IFormContext, _FormContext } from "./context";
 import { DefaultFormStateProvider } from "./defaultFormStateProvider";
-import { createTypedPath, TypedPath, TypedPathBase } from "utils/typedpath";
-import objectutil from "utils/object";
+import { createTypedPath, TypedPath, TypedPathBase } from "./typedpath";
+import objectutil from "./object";
 import { RegisteredField } from "./registeredField";
-import { ReactComponent, OmitUnion, CommonComponentProps, OmitName } from "z-types";
 import { IFieldFormatter, IFieldFormatterMetadata } from "./IFieldFormatter";
 import { FormValidatorType } from "./validators";
+import { CommonComponentProps, ReactComponent, OmitUnion } from "./types";
 
 export class Field<TValue, TComponentProps extends object, TFormatterValue = TValue, TFormValue = any> extends React.PureComponent<
 	FieldProps<TValue, TComponentProps, TFormatterValue, TFormValue>,
@@ -82,7 +82,7 @@ export class Field<TValue, TComponentProps extends object, TFormatterValue = TVa
 		}
 
 		const formVal = this.context.getFormValue();
-		const value = this.context.getValue(this.props.path);
+		const value = this.context.getValue<TValue>(this.props.path);
 
 		if (Array.isArray(this.props.validation)) {
 			for (const validator of this.props.validation as FormValidatorType<TValue, TFormValue>[]) {
@@ -112,7 +112,7 @@ export class Field<TValue, TComponentProps extends object, TFormatterValue = TVa
 		return {
 			path: this.path,
 			field: this.field,
-			setError: error => {
+			setError: (error) => {
 				this.context.setError(this.path, error);
 				// eslint-disable-next-line eqeqeq
 				this.hasErrorOverride = error == null;
@@ -132,10 +132,10 @@ export class Field<TValue, TComponentProps extends object, TFormatterValue = TVa
 		return {
 			...(this.props.componentProps as any),
 			fieldProps: {
-				onChange: e => {
+				onChange: (e: any) => {
 					let value: TFormatterValue;
 					if (typeof e === "object" && "target" in e) {
-						value = (e.target as any).value;
+						value = e.target.value;
 					} else {
 						value = e as TFormatterValue;
 					}
@@ -145,20 +145,20 @@ export class Field<TValue, TComponentProps extends object, TFormatterValue = TVa
 						this.uptake(value as any);
 					}
 				},
-				onBlur: e => {
+				onBlur: (e: React.FocusEvent) => {
 					if (this.props.formatter?.onBlur) {
 						this.props.formatter.onBlur(this.context.getValue(this.props.path), this.uptake, this.formatterMetadata());
 					}
 					this.props.onBlur?.(e);
 				},
-				onFocus: e => {
+				onFocus: (e: React.FocusEvent) => {
 					if (this.props.formatter?.onFocus) {
 						this.props.formatter.onFocus(this.context.getValue(this.props.path), this.uptake, this.formatterMetadata());
 					}
 					this.props.onFocus?.(e);
 				},
 				get value(): TFormatterValue {
-					const pathVal = field.context.getValue(field.props.path);
+					const pathVal = field.context.getValue<TValue>(field.props.path);
 					if (field.props.formatter?.downTake) {
 						return field.props.formatter.downTake(pathVal, field.formatterMetadata());
 					} else {
@@ -171,11 +171,11 @@ export class Field<TValue, TComponentProps extends object, TFormatterValue = TVa
 					return this.context.getFormValue();
 				},
 				/** Set the callback that will be invoked whenever the form component implementation should clear its value from the dom */
-				setClearCallback: action => {
+				setClearCallback: (action: () => void) => {
 					this.clearAction = action;
 				},
 				/** Manually set error from inside the form component. The error will need to be manually cleared by passing `null` or `undefined` */
-				setError: error => this.context.setError(this.path, error),
+				setError: (error: string) => this.context.setError(this.path, error),
 				field: this.field
 			},
 			componentProps() {
@@ -187,7 +187,7 @@ export class Field<TValue, TComponentProps extends object, TFormatterValue = TVa
 	}
 
 	render() {
-		return <this.props.component {...(this.getInjection() as any)}>{this.props.children}</this.props.component>;
+		return <this.props.component {...this.getInjection() as any}>{this.props.children}</this.props.component>;
 	}
 }
 

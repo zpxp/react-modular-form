@@ -16,7 +16,6 @@ module.exports = {
 	rules: {
 		// Place to specify ESLint rules. Can be used to overwrite rules specified from the extended configs
 		// e.g. "@typescript-eslint/explicit-function-return-type": "off",
-		"@typescript-eslint/ban-ts-ignore": "error",
 		// indent: "off",
 		// "@typescript-eslint/indent": ["warn", "tab", {  "ignoredNodes": ["ConditionalExpression"] }],
 		"@typescript-eslint/no-empty-interface": "off",
@@ -32,7 +31,7 @@ module.exports = {
 		semi: "off",
 		"@typescript-eslint/semi": ["error"],
 		"@typescript-eslint/ban-types": [
-			"error",
+			"off",
 			{
 				types: {
 					String: {
