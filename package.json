@@ -1,6 +1,6 @@
 {
   "name": "react-modular-form",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "lib/index.js",
   "repository": "git@github.com:zpxp/react-modular-form.git",
   "license": "MIT",
