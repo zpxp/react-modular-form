@@ -4,6 +4,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $PSDefaultParameterValues['*:ErrorAction']='Stop'
 
+yarn install
 yarn test --no-watch
 
 if ($lastexitcode -ne 0) {
