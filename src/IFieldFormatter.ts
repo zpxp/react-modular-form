@@ -37,7 +37,7 @@ export interface IFieldFormatter<TValue, TFormatterValue = TValue> {
 }
 
 /**
- * Infomation and helper utilities 
+ * Infomation and helper utilities
  */
 export interface IFieldFormatterMetadata<TValue> {
 	readonly path: string;

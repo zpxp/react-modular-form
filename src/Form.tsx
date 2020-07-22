@@ -32,8 +32,7 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 		this.state = {
 			context: {
 				watchChange: this.watchChange,
-				getValue: (path) =>
-					objectutil.getValue(this.state.stateProvider.readState(), typeof path === "string" ? path : path.path()),
+				getValue: path => objectutil.getValue(this.state.stateProvider.readState(), typeof path === "string" ? path : path.path()),
 				getFormValue: () => this.state.stateProvider.readState(),
 				setError: (path, error) => {
 					this.errors[path] = error;
@@ -78,7 +77,7 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 			setValue: (path, value, callback) => {
 				this.beginChange(path, value, "change", callback);
 			},
-			getValue: (path) => {
+			getValue: path => {
 				return objectutil.getValue(this.state.stateProvider.readState(), typeof path === "string" ? path : path.path());
 			},
 			clearField: (path, callback) => {
@@ -91,7 +90,7 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 				return this.checkValid(true, true);
 			},
 			isTouched: () => {
-				return this.registeredFields.some((x) => x.touched);
+				return this.registeredFields.some(x => x.touched);
 			},
 			getErrors: () => {
 				return { ...this.errors };
@@ -100,7 +99,7 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 				return this.watchChange(path, () => component.forceUpdate());
 			},
 			watchChange: this.watchChange,
-			getFormValue: (path) => {
+			getFormValue: path => {
 				return objectutil.getValue(this.state.stateProvider.readState(), typeof path === "string" ? path : path.path());
 			}
 		};
@@ -126,7 +125,7 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 		action: (pathThatChanged: string, newValue: any, event: FormChangeEvent) => void
 	) {
 		if (Array.isArray(path)) {
-			const watchers: ChangeWatcher[] = path.map((p) => {
+			const watchers: ChangeWatcher[] = path.map(p => {
 				const watcher = {
 					path: typeof p === "string" ? p : p.path(),
 					cb: action
@@ -136,7 +135,7 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 			});
 
 			return () => {
-				this.changeWatchers = this.changeWatchers.filter((x) => !watchers.includes(x));
+				this.changeWatchers = this.changeWatchers.filter(x => !watchers.includes(x));
 			};
 		} else {
 			const watcher = {
@@ -158,7 +157,7 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 		this.props.onChangeBegin?.(path, value, currentValue, newValue);
 		this.state.stateProvider.writeState(newValue, path, event);
 		this.setState(
-			(prev) => ({ changeCount: prev.changeCount + 1 }),
+			prev => ({ changeCount: prev.changeCount + 1 }),
 			() => {
 				this.props.onChange?.(path, value, newValue, currentValue);
 				callback?.(value);

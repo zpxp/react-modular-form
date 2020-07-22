@@ -1,11 +1,7 @@
 import * as React from "react";
-import { MergeStyles } from "./mergeStyles";
-import { IFormStateProvider, FormChangeEvent } from "./IStateProvider";
-import { InjectedForm, InjectedField } from "./injectedForm";
+import { InjectedField } from "./injectedForm";
 import { IFormContext, _FormContext } from "./context";
-import { DefaultFormStateProvider } from "./defaultFormStateProvider";
-import { createTypedPath, TypedPath, TypedPathBase } from "./typedpath";
-import objectutil from "./object";
+import { TypedPath } from "./typedpath";
 import { RegisteredField } from "./registeredField";
 import { IFieldFormatter, IFieldFormatterMetadata } from "./IFieldFormatter";
 import { FormValidatorType } from "./validators";
@@ -54,7 +50,7 @@ export class Field<TValue, TComponentProps extends object, TFormatterValue = TVa
 		return typeof this.props.path === "string" ? this.props.path : this.props.path.path();
 	}
 
-	private onChange(path: string, value: TValue, event: FormChangeEvent) {
+	private onChange(path: string, value: TValue) {
 		if (path === this.path) {
 			this.forceUpdate();
 		}
@@ -100,7 +96,7 @@ export class Field<TValue, TComponentProps extends object, TFormatterValue = TVa
 		return null;
 	}
 
-	componentDidUpdate(prevProps: FieldProps<TValue, TComponentProps, TFormatterValue, TFormValue>, prevState: State) {
+	componentDidUpdate(prevProps: FieldProps<TValue, TComponentProps, TFormatterValue, TFormValue>) {
 		if (prevProps.path !== this.props.path) {
 			this.unsub();
 			//create a new sub
@@ -112,7 +108,7 @@ export class Field<TValue, TComponentProps extends object, TFormatterValue = TVa
 		return {
 			path: this.path,
 			field: this.field,
-			setError: (error) => {
+			setError: error => {
 				this.context.setError(this.path, error);
 				// eslint-disable-next-line eqeqeq
 				this.hasErrorOverride = error == null;
@@ -187,7 +183,7 @@ export class Field<TValue, TComponentProps extends object, TFormatterValue = TVa
 	}
 
 	render() {
-		return <this.props.component {...this.getInjection() as any}>{this.props.children}</this.props.component>;
+		return <this.props.component {...(this.getInjection() as any)}>{this.props.children}</this.props.component>;
 	}
 }
 

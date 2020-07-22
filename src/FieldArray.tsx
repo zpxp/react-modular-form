@@ -1,11 +1,8 @@
 import * as React from "react";
 import { MergeStyles } from "./mergeStyles";
-import { IFormStateProvider, FormChangeEvent } from "./IStateProvider";
-import { InjectedForm, InjectedField, InjectedFieldArray } from "./injectedForm";
+import { InjectedFieldArray } from "./injectedForm";
 import { IFormContext, _FormContext } from "./context";
-import { DefaultFormStateProvider } from "./defaultFormStateProvider";
-import { createTypedPath, TypedPath, TypedPathBase } from "./typedpath";
-import objectutil from "./object";
+import { TypedPath } from "./typedpath";
 import { RegisteredField } from "./registeredField";
 import { FormValidatorType } from "./validators";
 import { CommonComponentProps } from "./types";
@@ -52,7 +49,7 @@ export class FieldArray<TValue, TFormValue = any> extends React.PureComponent<Fi
 		return typeof this.props.path === "string" ? this.props.path : this.props.path.path();
 	}
 
-	private onChange(path: string, value: TValue[], event: FormChangeEvent) {
+	private onChange(path: string, value: TValue[]) {
 		if (path === this.path) {
 			this.forceUpdate();
 		}
@@ -117,13 +114,13 @@ export class FieldArray<TValue, TFormValue = any> extends React.PureComponent<Fi
 		const field = this;
 
 		return {
-			map: (action) => {
+			map: action => {
 				const arr = getArray();
 				return arr.map((val, index) => {
 					return action(this.props.path[index], index, this.getKey(val, index));
 				});
 			},
-			forEach: (action) => {
+			forEach: action => {
 				const arr = getArray();
 				arr.forEach((val, index) => {
 					action(this.props.path[index], this.getKey(val, index), index);
@@ -149,7 +146,7 @@ export class FieldArray<TValue, TFormValue = any> extends React.PureComponent<Fi
 				arr.splice(start, count, ...newItems);
 				this.context.setValue(this.props.path, arr, "change", callback);
 			},
-			get: (index) => {
+			get: index => {
 				const arr = getArray();
 				return arr[index];
 			},
@@ -162,19 +159,19 @@ export class FieldArray<TValue, TFormValue = any> extends React.PureComponent<Fi
 				arr.splice(to, 0, ...arr.splice(from, 1));
 				this.context.setValue(this.props.path, arr, "change", callback);
 			},
-			pop: (callback) => {
+			pop: callback => {
 				const arr = getArray().slice();
 				const item = arr.pop();
 				this.context.setValue(this.props.path, arr, "change", callback);
 				return item;
 			},
-			shift: (callback) => {
+			shift: callback => {
 				const arr = getArray().slice();
 				const item = arr.shift();
 				this.context.setValue(this.props.path, arr, "change", callback);
 				return item;
 			},
-			clear: (callback) => {
+			clear: callback => {
 				this.context.setValue(this.props.path, this.props.defaultValue ?? [], "change", callback);
 			},
 			swap: (index1, index2, callback) => {
