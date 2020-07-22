@@ -1,6 +1,12 @@
-# Template
+# react-modular-form
 
-This project is still a WIP
+A simple yet powerful react form library that is easily extendable and promotes reusability
+
+![Bundlephobia gzip + minified](https://badgen.net/bundlephobia/minzip/react-modular-form)
+
+`yarn add react-modular-form`
+
+`npm install react-modular-form`
 
 ### Example
 
