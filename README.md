@@ -128,3 +128,18 @@ RMF has built in support for `react-css-modules`. Simply pass your classes objec
 ```tsx
 <Form<LoginDto> classes={styles}>
 ```
+
+## Exports
+
+ Component | Description
+ --- | ---
+ `Field` | Represents an input component via prop `component={...}` and stores the value at `path`.
+ `FieldArray` | Denotes an array field. Takes a single function as child that must return a `React.ReactNode`.
+ `Form` | The root form component. These can be nested but cannot interact with each other.
+ `FormFactory` | A decorator to wrap a class component with `Form`.
+ `IFieldFormatter` | Interface to define a field formatter. Field formatters mutate the data passed between `Field` <--> state.
+ `IFormStateProvider` | Interface to define a custom state provider. Custom state providers are passed to `Form` or `FormFactory`.
+ `InjectedField`| Props injected into field components.
+ `InjectedFieldArray` | Props injected into field array components.
+ `InjectedForm` | Props injected by `FormFactory`.
+ `FormValidators` | Built in field validators. Custom validators can be defined and passed to the `validation` props as a single argument or an array of validators.
