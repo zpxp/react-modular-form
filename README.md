@@ -143,3 +143,4 @@ RMF has built in support for `react-css-modules`. Simply pass your classes objec
  `InjectedFieldArray` | Props injected into field array components.
  `InjectedForm` | Props injected by `FormFactory`.
  `FormValidators` | Built in field validators. Custom validators can be defined and passed to the `validation` props as a single argument or an array of validators.
+ `createTypedPath` | Create a `TypedPath` object.
