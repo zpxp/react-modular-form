@@ -16,6 +16,10 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 	private changeWatchers: ChangeWatcher[] = [];
 	private registeredFields: RegisteredField[] = [];
 
+	static defaultProps: Partial<FormPropsConfig<any>> = {
+		strictFieldRegistration: true
+	};
+
 	constructor(props: FormPropsConfig<TFormState>) {
 		super(props);
 
