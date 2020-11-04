@@ -1,7 +1,7 @@
 import { RegisteredField } from "./registeredField";
 
 /**
- * Interface to build an intercepter object that can be used to format field values when they trigger certian events
+ * Interface to build an intercepter object that can be used to format field values when they trigger certain events
  */
 export interface IFieldFormatter<TValue, TFormatterValue = TValue> {
 	/**
@@ -29,7 +29,7 @@ export interface IFieldFormatter<TValue, TFormatterValue = TValue> {
 	onFocus?(currentFormVal: TValue, uptake: (formVal: TValue) => void, metadata: IFieldFormatterMetadata<TValue>): void;
 
 	/**
-	 * Recieve the form value and convert into a format suitable for the field
+	 * Receive the form value and convert into a format suitable for the field
 	 * @param currentFormVal Value from the form state
 	 * @param metadata Utilities for this field
 	 */
@@ -37,7 +37,7 @@ export interface IFieldFormatter<TValue, TFormatterValue = TValue> {
 }
 
 /**
- * Infomation and helper utilities
+ * Information and helper utilities 
  */
 export interface IFieldFormatterMetadata<TValue> {
 	readonly path: string;

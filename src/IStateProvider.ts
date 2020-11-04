@@ -1,3 +1,4 @@
+
 /**
  * Interface to implement to define custom form state storage
  */
@@ -15,6 +16,7 @@ export interface IFormStateProvider<TFormValue> {
 	writeState(newState: TFormValue, changePath: string, changeEvent: FormChangeEvent): void;
 }
 
+
 /**
  * Type of event that triggered this state change
  *
@@ -29,7 +31,7 @@ export interface IFormStateProvider<TFormValue> {
  *
  * `initialize`:
  * 	 any event that sets the state back to `initialValues` or a blank state
- *
+ * 
  * `clearfield`:
  * 	 called on clearing a field
  */

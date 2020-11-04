@@ -71,6 +71,10 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 				}
 			},
 			reset: () => {
+				for (const field of this.registeredFields) {
+					field.dirty = false;
+					field.touched = false;
+				}
 				this.errors = {};
 				this.beginChange(null, this.props.initialValues || {}, "defaultVal");
 			},

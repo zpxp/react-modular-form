@@ -6,6 +6,7 @@ import { TypedPath } from "./typedpath";
 import { RegisteredField } from "./registeredField";
 import { FormValidatorType } from "./validators";
 import { CommonComponentProps } from "./types";
+import { FormChangeEvent } from "./IStateProvider";
 
 let keyIndex = 0;
 const keySym = typeof Symbol === "undefined" ? "$$form_fieldArrayKey" : Symbol.for("$$form_fieldArrayKey");
@@ -33,6 +34,7 @@ export class FieldArray<TValue, TFormValue = any> extends React.PureComponent<Fi
 				return field.path;
 			},
 			touched: false,
+			dirty: false,
 			isFieldArray: true,
 			get error() {
 				return field.context.getErrors()[field.path];
@@ -49,7 +51,7 @@ export class FieldArray<TValue, TFormValue = any> extends React.PureComponent<Fi
 		return typeof this.props.path === "string" ? this.props.path : this.props.path.path();
 	}
 
-	private onChange(path: string, value: TValue[]) {
+	private onChange(path: string, value: TValue[], event: FormChangeEvent) {
 		if (path === this.path) {
 			this.forceUpdate();
 		}

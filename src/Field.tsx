@@ -5,7 +5,8 @@ import { TypedPath } from "./typedpath";
 import { RegisteredField } from "./registeredField";
 import { IFieldFormatter, IFieldFormatterMetadata } from "./IFieldFormatter";
 import { FormValidatorType } from "./validators";
-import { CommonComponentProps, ReactComponent, OmitUnion } from "./types";
+import { FormChangeEvent } from "./IStateProvider";
+import { CommonComponentProps, OmitUnion, ReactComponent } from "./types";
 
 export class Field<TValue, TComponentProps extends object, TFormatterValue = TValue, TFormValue = any> extends React.PureComponent<
 	FieldProps<TValue, TComponentProps, TFormatterValue, TFormValue>,
@@ -36,6 +37,7 @@ export class Field<TValue, TComponentProps extends object, TFormatterValue = TVa
 				return field.path;
 			},
 			touched: false,
+			dirty: false,
 			isFieldArray: false,
 			get error() {
 				return field.context.getErrors()[field.path];
@@ -50,15 +52,26 @@ export class Field<TValue, TComponentProps extends object, TFormatterValue = TVa
 		return typeof this.props.path === "string" ? this.props.path : this.props.path.path();
 	}
 
-	private onChange(path: string, value: TValue) {
-		if (path === this.path) {
+	private onChange(path: string, value: TValue, event: FormChangeEvent) {
+		if (!path || path === this.path) {
 			this.forceUpdate();
 		}
 
-		const error = this.getErrors(true, false);
+		const error = this.getErrors(false, false);
 		this.context.setError(this.path, error);
 
 		this.props.onChange?.(value);
+	}
+
+	componentDidMount() {
+		if (this.props.defaultValue !== undefined) {
+			const val = this.context.getValue(this.path);
+			// eslint-disable-next-line eqeqeq
+			if (val == null) {
+				//set the default val
+				this.context.setValue(this.path, this.props.defaultValue, "defaultVal");
+			}
+		}
 	}
 
 	componentWillUnmount() {
@@ -78,7 +91,7 @@ export class Field<TValue, TComponentProps extends object, TFormatterValue = TVa
 		}
 
 		const formVal = this.context.getFormValue();
-		const value = this.context.getValue<TValue>(this.props.path);
+		const value = this.context.getValue(this.props.path);
 
 		if (Array.isArray(this.props.validation)) {
 			for (const validator of this.props.validation as FormValidatorType<TValue, TFormValue>[]) {
@@ -96,7 +109,7 @@ export class Field<TValue, TComponentProps extends object, TFormatterValue = TVa
 		return null;
 	}
 
-	componentDidUpdate(prevProps: FieldProps<TValue, TComponentProps, TFormatterValue, TFormValue>) {
+	componentDidUpdate(prevProps: FieldProps<TValue, TComponentProps, TFormatterValue, TFormValue>, prevState: State) {
 		if (prevProps.path !== this.props.path) {
 			this.unsub();
 			//create a new sub
@@ -128,12 +141,13 @@ export class Field<TValue, TComponentProps extends object, TFormatterValue = TVa
 		return {
 			...(this.props.componentProps as any),
 			fieldProps: {
-				onChange: (e: any) => {
+				onChange: e => {
+					this.field.dirty = true;
 					let value: TFormatterValue;
 					if (typeof e === "object" && "target" in e) {
-						value = e.target.value;
+						value = (e.target as any).value;
 					} else {
-						value = e as TFormatterValue;
+						value = e;
 					}
 					if (this.props.formatter?.onChange) {
 						this.props.formatter.onChange(value, this.uptake, this.formatterMetadata());
@@ -141,20 +155,24 @@ export class Field<TValue, TComponentProps extends object, TFormatterValue = TVa
 						this.uptake(value as any);
 					}
 				},
-				onBlur: (e: React.FocusEvent) => {
+				onBlur: e => {
+					if (!this.field.touched) {
+						this.field.touched = true;
+						this.forceUpdate();
+					}
 					if (this.props.formatter?.onBlur) {
 						this.props.formatter.onBlur(this.context.getValue(this.props.path), this.uptake, this.formatterMetadata());
 					}
 					this.props.onBlur?.(e);
 				},
-				onFocus: (e: React.FocusEvent) => {
+				onFocus: e => {
 					if (this.props.formatter?.onFocus) {
 						this.props.formatter.onFocus(this.context.getValue(this.props.path), this.uptake, this.formatterMetadata());
 					}
 					this.props.onFocus?.(e);
 				},
 				get value(): TFormatterValue {
-					const pathVal = field.context.getValue<TValue>(field.props.path);
+					const pathVal = field.context.getValue(field.props.path);
 					if (field.props.formatter?.downTake) {
 						return field.props.formatter.downTake(pathVal, field.formatterMetadata());
 					} else {
@@ -167,11 +185,11 @@ export class Field<TValue, TComponentProps extends object, TFormatterValue = TVa
 					return this.context.getFormValue();
 				},
 				/** Set the callback that will be invoked whenever the form component implementation should clear its value from the dom */
-				setClearCallback: (action: () => void) => {
+				setClearCallback: action => {
 					this.clearAction = action;
 				},
 				/** Manually set error from inside the form component. The error will need to be manually cleared by passing `null` or `undefined` */
-				setError: (error: string) => this.context.setError(this.path, error),
+				setError: error => this.context.setError(this.path, error),
 				field: this.field
 			},
 			componentProps() {
