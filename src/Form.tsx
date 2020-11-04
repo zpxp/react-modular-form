@@ -53,6 +53,9 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 	}
 
 	private registerField(field: RegisteredField) {
+		if (this.props.strictFieldRegistration && this.registeredFields.some(x => x.path === field.path)) {
+			throw new Error(`Field with path '${field.path}' already registered.`);
+		}
 		this.registeredFields.push(field);
 	}
 
@@ -156,6 +159,9 @@ export class Form<TFormState extends object> extends React.PureComponent<FormPro
 
 	private beginChange(_path: string | TypedPath<any>, value: any, event: FormChangeEvent, callback?: (val: any) => void) {
 		const path = typeof _path === "string" ? _path : _path.path();
+		if (this.props.debugMode) {
+			console.log(path, event, value);
+		}
 		const currentValue = this.state.stateProvider.readState();
 		const newValue = objectutil.setValue(currentValue, path, value, this.props.pure);
 		this.props.onChangeBegin?.(path, value, currentValue, newValue);
@@ -189,7 +195,7 @@ export interface FormPropsConfig<TFormState> {
 	/**
 	 * Throw an error if the same field path is registered twice.
 	 *
-	 * Use this if you wish to have multiple fields point to the same path or if using drag n drop fields, as that will temporaraly duplicate fields.
+	 * Use this if you wish to have multiple fields point to the same path or if using drag n drop fields, as that will temporarily duplicate fields.
 	 * Defaults to `true`
 	 * */
 	strictFieldRegistration?: boolean;
